@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบรายงานผลการตรวจสอบหม้อแปลงไฟฟ้า</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4 font-sans">
+
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="bg-purple-700 p-6 text-center">
+            <div class="inline-block p-3 rounded-full bg-purple-600 mb-3 shadow-inner">
+                <i class="fas fa-bolt text-2xl text-yellow-300"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-white">รายงานตรวจสอบหม้อแปลง</h1>
+            <p class="text-purple-200 text-sm mt-1">บันทึกข้อมูลและแนบรูปถ่ายหน้างาน</p>
+        </div>
+
+        <form id="inspectionForm" class="p-6 space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">หมายเลขหม้อแปลง <span class="text-red-500">*</span></label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-hashtag text-gray-400"></i>
+                    </div>
+                    <input type="text" id="transformerNo" required placeholder="เช่น TR-12345"
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">พิกัด (kVA) <span class="text-red-500">*</span></label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-tachometer-alt text-gray-400"></i>
+                    </div>
+                    <input type="text" id="capacity" required placeholder="เช่น 250, 500, 1000" list="kva-list"
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition">
+                    <datalist id="kva-list">
+                        <option value="50"></option>
+                        <option value="100"></option>
+                        <option value="160"></option>
+                        <option value="250"></option>
+                        <option value="315"></option>
+                        <option value="400"></option>
+                        <option value="500"></option>
+                        <option value="1000"></option>
+                    </datalist>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">ผลการตรวจสอบ <span class="text-red-500">*</span></label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-clipboard-check text-gray-400"></i>
+                    </div>
+                    <select id="result" required
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition appearance-none bg-white">
+                        <option value="" disabled selected>-- เลือกผลการตรวจสอบ --</option>
+                        <option value="ปกติ (Normal)">สภาพปกติ (Normal)</option>
+                        <option value="น้ำมันรั่วซึม (Oil Leak)">น้ำมันรั่วซึม (Oil Leak)</option>
+                        <option value="ชำรุด/รอซ่อม (Defective)">ชำรุด/ต้องซ่อมแซม (Defective)</option>
+                        <option value="อื่นๆ (Others)">อื่นๆ (Others)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">รูปถ่ายหน้างาน <span class="text-red-500">*</span></label>
+                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-purple-500 transition relative bg-gray-50">
+                    <div class="space-y-1 text-center">
+                        <i class="fas fa-camera text-3xl text-gray-400 mb-2"></i>
+                        <div class="flex text-sm text-gray-600 justify-center">
+                            <label for="imageUpload" class="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none">
+                                <span>อัปโหลดรูปภาพ หรือ ถ่ายรูป</span>
+                                <input id="imageUpload" name="imageUpload" type="file" accept="image/*" capture="environment" class="sr-only" required>
+                            </label>
+                        </div>
+                        <p class="text-xs text-gray-500" id="fileName">PNG, JPG ไม่เกิน 5MB</p>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn"
+                class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 font-medium transition duration-150 mt-6">
+                <i class="fas fa-paper-plane mr-2"></i> บันทึกข้อมูล
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // ใส่ URL ล่าสุดของคุณให้เรียบร้อยแล้วครับ
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbyzIyCoG0AE6INb1QAeT9X61bErIWuDqM8G-c-KrUoq6Tibx3r5_A9LU2w4oloAJCnD/exec';
+
+        const form = document.getElementById('inspectionForm');
+        const fileInput = document.getElementById('imageUpload');
+        const fileNameDisplay = document.getElementById('fileName');
+        const submitBtn = document.getElementById('submitBtn');
+
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                fileNameDisplay.textContent = e.target.files[0].name;
+                fileNameDisplay.classList.add('text-purple-600', 'font-semibold');
+            } else {
+                fileNameDisplay.textContent = 'PNG, JPG ไม่เกิน 5MB';
+                fileNameDisplay.classList.remove('text-purple-600', 'font-semibold');
+            }
+        });
+
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> กำลังบันทึกข้อมูล...';
+            submitBtn.classList.replace('bg-purple-700', 'bg-gray-400');
+
+            try {
+                const file = fileInput.files[0];
+                const base64 = await getBase64(file);
+
+                const payload = {
+                    transformerNo: document.getElementById('transformerNo').value,
+                    capacity: document.getElementById('capacity').value,
+                    result: document.getElementById('result').value,
+                    imageBase64: base64,
+                    mimeType: file.type
+                };
+
+                const response = await fetch(scriptUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(payload),
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8', 
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    Swal.fire({
+                        title: 'สำเร็จ!',
+                        text: 'บันทึกข้อมูลและอัปโหลดรูปภาพเรียบร้อยแล้ว',
+                        icon: 'success',
+                        confirmButtonColor: '#6b21a8'
+                    });
+                    form.reset();
+                    fileNameDisplay.textContent = 'PNG, JPG ไม่เกิน 5MB';
+                    fileNameDisplay.classList.remove('text-purple-600', 'font-semibold');
+                } else {
+                    throw new Error(result.message);
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถบันทึกข้อมูลได้: ' + error.message,
+                    icon: 'error',
+                    confirmButtonColor: '#6b21a8'
+                });
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> บันทึกข้อมูล';
+                submitBtn.classList.replace('bg-gray-400', 'bg-purple-700');
+            }
+        });
+    </script>
+</body>
+</html>
